@@ -14,7 +14,7 @@ by Edoardo Caciorgna
 
 const commands = {
 	help: <p><strong>Available commands:</strong> 
-			<br></br>- help : this command, 
+			<br></br>- help : shows this help message, 
 			<br></br>- whoami: a brief introduction to me, 
 			<br></br>- education: what I studied, 
 			<br></br>- research: the fields I'm interested in, 
@@ -198,35 +198,49 @@ export default function RoboticsTerminal() {
 		}
 	};
 
-	return (
-		<div className="bg-[#002b36] text-[#839496] min-h-screen p-4 font-mono">
-			<pre className="text-[#268bd2]">{robotAscii}</pre>
-			<div className="mb-2 text-[#2aa198]">Welcome to my personal website. Type 'help' to begin. (This is a fake terminal)</div>
-			{history.map((item, index) => (
-				<div key={index} className="mb-1">
-					<div className="flex">
-						<span className="text-[#859900]">user@EdoardoCaciorgna:</span>
-						<span className="text-[#268bd2]">~$</span>
-						<span className="text-[#b58900] ml-2">{item.command}</span>
-					</div>
-					<div className={`ml-2 whitespace-pre-line ${item.command in commands ? 'text-[#839496]' : 'text-[#dc322f]'}`}>
-						{item.response}
-					</div>
-				</div>
-			))}
-			<div className="flex items-center">
-				<span className="text-[#859900]">user@EdoardoCaciorgna:</span>
-				<span className="text-[#268bd2]">~$</span>
-				<input
-					ref={inputRef}
-					type="text"
-					value={input}
-					onChange={(e) => setInput(e.target.value)}
-					onKeyDown={executeCommand}
-					autoFocus
-					className="bg-transparent outline-none text-[#b58900] ml-2 flex-grow"
-				/>
-			</div>
-		</div>
-	);
+    return (
+        <div className="bg-[#002b36] text-[#839496] min-h-screen p-4 font-mono">
+            <pre className="text-[#268bd2]">{robotAscii}</pre>
+            <div className="mb-2 text-[#2aa198]">
+            Hi there, welcome to my personal website. 👋<br></br>I'm a dedicated and enthusiastic Master's degree student pursuing a degree in Robotics Engineering, with a strong passion for robotics, autonomous driving, and cutting-edge technology.<br></br><br></br>Fun fact: My GitHub username "rimaturus" is derived from the Latin word "rimor" meaning "to explore/discover." I chose this verb in the future participle form to reflect my ongoing passion and commitment for delving into new technologies and pushing the boundaries of what's possible in robotics.
+            <br></br>
+            <br></br>
+            (This is a fake terminal)</div>
+            <div className="mb-1">
+                <div className="flex">
+                    <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
+                    <span className="text-[#268bd2]">~$</span>
+                    <span className="text-[#b58900] ml-2">help</span>
+                </div>
+                <div className="ml-2 whitespace-pre-line text-[#839496]">
+                    {commands.help}
+                </div>
+            </div>
+            {history.map((item, index) => (
+                <div key={index} className="mb-1">
+                    <div className="flex">
+                        <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
+                        <span className="text-[#268bd2]">~$</span>
+                        <span className="text-[#b58900] ml-2">{item.command}</span>
+                    </div>
+                    <div className={`ml-2 whitespace-pre-line ${item.command in commands ? 'text-[#839496]' : 'text-[#dc322f]'}`}>
+                        {item.response}
+                    </div>
+                </div>
+            ))}
+            <div className="flex items-center">
+                <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
+                <span className="text-[#268bd2]">~$</span>
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={executeCommand}
+                    autoFocus
+                    className="bg-transparent outline-none text-[#b58900] ml-2 flex-grow"
+                />
+            </div>
+        </div>
+    );
 }
