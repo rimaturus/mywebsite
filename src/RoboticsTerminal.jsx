@@ -14,12 +14,12 @@ by Edoardo Caciorgna
 
 // Mobile-friendly ASCII art - simplified version for small screens
 const mobileRobotAscii = `
-██████╗ ██╗███╗   ███╗ █████╗ ████████╗ ██╗   ██╗ ██████╗  ██╗   ██╗ ███████
-██╔══██╗██║████╗ ████║██╔══██╗╚══██╔══╝ ██║   ██║ ██╔══██╗ ██║   ██║ ██╔════
-██████╔╝██║██╔████╔██║███████║   ██║    ██║   ██║ ██████╔╝ ██║   ██║ ███████
-██╔══██╗██║██║╚██╔╝██║██╔══██║   ██║    ██║   ██║ ██╔══██╗ ██║   ██║ ╚════██
-██║  ██║██║██║ ╚═╝ ██║██║  ██║   ██║    ╚██████╔╝ ██║  ██║ ╚██████╔╝ ███████
-╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝     ╚═════╝  ╚═╝  ╚═╝  ╚═════╝  ╚══════
+██████╗ ██╗███╗   ███╗ █████╗ ████████╗██╗   ██╗██████╗ ██╗   ██╗███████╗
+██╔══██╗██║████╗ ████║██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██║   ██║██╔════╝
+██████╔╝██║██╔████╔██║███████║   ██║   ██║   ██║██████╔╝██║   ██║███████╗
+██╔══██╗██║██║╚██╔╝██║██╔══██║   ██║   ██║   ██║██╔══██╗██║   ██║╚════██║
+██║  ██║██║██║ ╚═╝ ██║██║  ██║   ██║   ╚██████╔╝██║  ██║╚██████╔╝███████║
+╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 by Edoardo Caciorgna
 `;
 
@@ -227,7 +227,7 @@ export default function RoboticsTerminal() {
 
     return (
         <div ref={terminalRef} className="bg-[#002b36] text-[#839496] min-h-screen p-2 md:p-4 font-mono overflow-auto text-sm md:text-base">
-            <pre className={`text-[#268bd2] overflow-x-auto whitespace-pre-wrap leading-tight ${isMobile ? 'text-[8px]' : 'text-xs md:text-sm'}`}>
+            <pre className={`text-[#268bd2] overflow-x-auto whitespace-pre-wrap leading-tight ${isMobile ? 'text-[1.8vw]' : 'text-xs md:text-sm'}`}>
                 {isMobile ? mobileRobotAscii : robotAscii}
             </pre>
             <div className="mb-2 text-[#2aa198] text-sm md:text-base leading-tight">
@@ -237,7 +237,7 @@ export default function RoboticsTerminal() {
             </div>
             <div className="mb-1">
                 <div className="flex flex-wrap">
-                    <span className="text-[#859900]">user@EdoC:</span>
+                    <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
                     <span className="text-[#268bd2]">~$</span>
                     <span className="text-[#b58900] ml-1">help</span>
                 </div>
@@ -248,7 +248,7 @@ export default function RoboticsTerminal() {
             {history.map((item, index) => (
                 <div key={index} className="mb-1">
                     <div className="flex flex-wrap">
-                        <span className="text-[#859900]">user@EdoC:</span>
+                        <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
                         <span className="text-[#268bd2]">~$</span>
                         <span className="text-[#b58900] ml-1">{item.command}</span>
                     </div>
@@ -258,7 +258,7 @@ export default function RoboticsTerminal() {
                 </div>
             ))}
             <div className="flex flex-wrap items-center">
-                <span className="text-[#859900]">user@EdoC:</span>
+                <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
                 <span className="text-[#268bd2]">~$</span>
                 <input
                     ref={inputRef}
