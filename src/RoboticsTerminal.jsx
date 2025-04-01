@@ -8,7 +8,7 @@ const robotAscii = `
 ██████╔╝ ██║ ██╔████╔██║ ███████║    ██║    ██║   ██║ ██████╔╝ ██║   ██║ ███████╗
 ██╔══██╗ ██║ ██║╚██╔╝██║ ██╔══██║    ██║    ██║   ██║ ██╔══██╗ ██║   ██║ ╚════██║
 ██║  ██║ ██║ ██║ ╚═╝ ██║ ██║  ██║    ██║    ╚██████╔╝ ██║  ██║ ╚██████╔╝ ███████║
-╚═╝  ╚═╝ ╚═╝ ╚═╝     ╚═╝ ╚═╝  ╚═╝    ╚═╝     ╚═════╝  ╚═╝  ╚═╝  ╚═════╝  ╚══════╝
+╚═╝  ╚═╝ ╚═╝ ╚═╝     ╚═╝╚═╝  ╚═╝    ╚═╝     ╚═════╝  ╚═╝  ╚═╝  ╚═════╝  ╚══════╝
 by Edoardo Caciorgna
 
 `;
@@ -20,23 +20,23 @@ const mobileRobotAscii = `
 ██████╔╝██║██╔████╔██║███████║   ██║   ██║   ██║██████╔╝██║   ██║███████╗
 ██╔══██╗██║██║╚██╔╝██║██╔══██║   ██║   ██║   ██║██╔══██╗██║   ██║╚════██║
 ██║  ██║██║██║ ╚═╝ ██║██║  ██║   ██║   ╚██████╔╝██║  ██║╚██████╔╝███████║
-╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝  ╚═════╝  ╚══════╝
 by Edoardo Caciorgna
 `;
 
 const commands = {
     help: <p><strong>Available commands:</strong> 
-            <br></br>- <strong>help</strong>  : shows this help message, 
-            <br></br>- <strong>whoami</strong> : a brief introduction to me, 
-            <br></br>- <strong>education</strong> : what I studied, 
-            <br></br>- <strong>research</strong> : the fields I'm interested in, 
-            <br></br>- <strong>projects</strong> : main project where I was involved, 
-            <br></br>- <strong>skills</strong> ,
+            <br></br>- <strong>clear</strong> : clear the terminal,
             <br></br>- <strong>contacts</strong> , 
             <br></br>- <strong>cv</strong> : download my CV,
             <br></br>- <strong>dv</strong> : display autonomous driving visualization,
-            <br></br>- <strong>clear</strong> : clear the terminal</p>,
-    
+            <br></br>- <strong>education</strong> : what I studied, 
+            <br></br>- <strong>help</strong>  : shows this help message, 
+            <br></br>- <strong>projects</strong> : main project where I was involved, 
+            <br></br>- <strong>research</strong> : the fields I'm interested in, 
+            <br></br>- <strong>skills</strong> ,
+            <br></br>- <strong>whoami</strong> : a brief introduction to me, 
+            </p>,
     whoami: `Hi there 👋\nI'm a dedicated and enthusiastic Master's degree student pursuing a degree in Robotics Engineering, with a strong passion for robotics, autonomous driving, and cutting-edge technology.\n\nFun fact: My GitHub username "rimaturus" is derived from the Latin word "rimor" meaning "to explore/discover." I chose this verb in the future participle form to reflect my ongoing passion and commitment for delving into new technologies and pushing the boundaries of what's possible in robotics.`,
 
     education: `🎓 Master's Degree in Robotics Engineering - University of Pisa\n🎓 Bachelor's Degree in Electronics Engineering - University of Pisa`,
@@ -228,6 +228,76 @@ export default function RoboticsTerminal() {
         }
     };
 
+    // New function to handle command execution via tap
+    const executeCommandByTap = (command) => {
+        if (command === 'clear') {
+            setHistory([]);
+        }
+        else if (command === 'cv') {
+            setHistory([...history, {
+                command: command,
+                response: 'Do you want to download my CV? [Y/n]'
+            }]);
+            setWaitingForCvResponse(true);
+        }
+        else {
+            setHistory([...history, {
+                command: command,
+                response: commands[command] || 'Command not found'
+            }]);
+            
+            // Add command to history for arrow navigation
+            setCommandHistory([command, ...commandHistory]);
+        }
+        // Focus the input again after executing command
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    };
+
+    // Modify the help command to include clickable items in mobile mode
+    const renderHelp = () => {
+        if (!isMobile) {
+            return commands.help;
+        }
+        
+        return (
+            <div>
+                <p><strong>Available commands:</strong> <span className="text-[#2aa198] italic">(tap on any command to execute it)</span></p>
+                <p onClick={() => executeCommandByTap('clear')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>clear</strong>: clear the terminal
+                </p>
+                <p onClick={() => executeCommandByTap('contacts')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>contacts</strong>
+                </p>
+                <p onClick={() => executeCommandByTap('cv')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>cv</strong>: download my CV
+                </p>
+                <p onClick={() => executeCommandByTap('dv')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>dv</strong>: display autonomous driving visualization
+                </p>
+                <p onClick={() => executeCommandByTap('education')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>education</strong>: what I studied
+                </p>
+                <p onClick={() => executeCommandByTap('help')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>help</strong>: shows this help message
+                </p>
+                <p onClick={() => executeCommandByTap('projects')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>projects</strong>: main project where I was involved
+                </p>
+                <p onClick={() => executeCommandByTap('research')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>research</strong>: the fields I'm interested in
+                </p>
+                <p onClick={() => executeCommandByTap('skills')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>skills</strong>
+                </p>
+                <p onClick={() => executeCommandByTap('whoami')} className="cursor-pointer hover:text-[#2aa198]">
+                    - <strong>whoami</strong>: a brief introduction to me
+                </p>
+            </div>
+        );
+    };
+
     return (
         <div ref={terminalRef} className="bg-[#002b36] text-[#839496] min-h-screen p-2 md:p-4 font-mono overflow-auto text-sm md:text-base">
             <pre className={`text-[#268bd2] overflow-x-auto whitespace-pre-wrap leading-tight ${isMobile ? 'text-[1.8vw]' : 'text-xs md:text-sm'}`}>
@@ -245,7 +315,7 @@ export default function RoboticsTerminal() {
                     <span className="text-[#b58900] ml-1">help</span>
                 </div>
                 <div className="ml-2 whitespace-pre-line text-[#839496] leading-tight">
-                    {commands.help}
+                    {renderHelp()}
                 </div>
             </div>
             {history.map((item, index) => (
