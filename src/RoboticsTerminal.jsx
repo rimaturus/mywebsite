@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import myImage from './images/myImage.jpeg';
+import DrivingGame from './DrivingGame';
 
 const robotAscii = `
 ██████╗  ██╗ ███╗   ███╗  █████╗  ████████╗ ██╗   ██╗ ██████╗  ██╗   ██╗ ███████╗
@@ -33,6 +34,7 @@ const commands = {
             <br></br>- skills,
             <br></br>- contacts, 
             <br></br>- cv: download my CV,
+            <br></br>- dv: display autonomous driving visualization,
             <br></br>- clear: clear the terminal</p>,
     
     whoami: `Hi there 👋\nI'm a dedicated and enthusiastic Master's degree student pursuing a degree in Robotics Engineering, with a strong passion for robotics, autonomous driving, and cutting-edge technology.\n\nFun fact: My GitHub username "rimaturus" is derived from the Latin word "rimor" meaning "to explore/discover." I chose this verb in the future participle form to reflect my ongoing passion and commitment for delving into new technologies and pushing the boundaries of what's possible in robotics.`,
@@ -67,6 +69,7 @@ const commands = {
             </div>
         </div>
     ),
+    dv: <DrivingGame />,
     cv: '[Prompting for CV download...]',
 };
 
