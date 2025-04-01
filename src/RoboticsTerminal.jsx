@@ -26,16 +26,16 @@ by Edoardo Caciorgna
 
 const commands = {
     help: <p><strong>Available commands:</strong> 
-            <br></br>- help : shows this help message, 
-            <br></br>- whoami: a brief introduction to me, 
-            <br></br>- education: what I studied, 
-            <br></br>- research: the fields I'm interested in, 
-            <br></br>- projects: main project where I was involved, 
-            <br></br>- skills,
-            <br></br>- contacts, 
-            <br></br>- cv: download my CV,
-            <br></br>- dv: display autonomous driving visualization,
-            <br></br>- clear: clear the terminal</p>,
+            <br></br>- <strong>help</strong>  : shows this help message, 
+            <br></br>- <strong>whoami</strong> : a brief introduction to me, 
+            <br></br>- <strong>education</strong> : what I studied, 
+            <br></br>- <strong>research</strong> : the fields I'm interested in, 
+            <br></br>- <strong>projects</strong> : main project where I was involved, 
+            <br></br>- <strong>skills</strong> ,
+            <br></br>- <strong>contacts</strong> , 
+            <br></br>- <strong>cv</strong> : download my CV,
+            <br></br>- <strong>dv</strong> : display autonomous driving visualization,
+            <br></br>- <strong>clear</strong> : clear the terminal</p>,
     
     whoami: `Hi there 👋\nI'm a dedicated and enthusiastic Master's degree student pursuing a degree in Robotics Engineering, with a strong passion for robotics, autonomous driving, and cutting-edge technology.\n\nFun fact: My GitHub username "rimaturus" is derived from the Latin word "rimor" meaning "to explore/discover." I chose this verb in the future participle form to reflect my ongoing passion and commitment for delving into new technologies and pushing the boundaries of what's possible in robotics.`,
 

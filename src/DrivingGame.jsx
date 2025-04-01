@@ -186,12 +186,12 @@ const DrivingGame = () => {
           ctx.arc(wp.x, wp.y, 3, 0, 2 * Math.PI);
           ctx.fill();
           
-          // Draw waypoint number
-          ctx.fillStyle = 'white';
-          ctx.font = '10px Arial';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(index.toString(), wp.x, wp.y - 10);
+        //   // Draw waypoint number
+        //   ctx.fillStyle = 'white';
+        //   ctx.font = '10px Arial';
+        //   ctx.textAlign = 'center';
+        //   ctx.textBaseline = 'middle';
+        //   ctx.fillText(index.toString(), wp.x, wp.y - 10);
           
           // Highlight current target waypoint
           if (index === car.currentWaypointIndex) {
