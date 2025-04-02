@@ -77,10 +77,12 @@ const commands = {
 export default function RoboticsTerminal() {
     const [history, setHistory] = useState([]);
     const [input, setInput] = useState('');
+    const [suggestion, setSuggestion] = useState(''); // Add suggestion state
     const [commandHistory, setCommandHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
     const inputRef = useRef(null);
     const terminalRef = useRef(null);
+    const bottomRef = useRef(null); // New ref for scrolling to bottom
     const [waitingForCvResponse, setWaitingForCvResponse] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -95,15 +97,65 @@ export default function RoboticsTerminal() {
         checkMobile();
         window.addEventListener('resize', checkMobile);
         
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-    
-    // Scroll to bottom when history changes
-    useEffect(() => {
+        // Enhanced click handler that focuses input when clicking anywhere on terminal background
+        const handleTerminalClick = (e) => {
+            // Get the clicked element
+            const target = e.target;
+            
+            // Don't capture clicks on interactive elements or their children
+            if (target.tagName === 'INPUT' || 
+                target.tagName === 'BUTTON' || 
+                target.tagName === 'A' || 
+                target.tagName === 'IMG' ||
+                target.classList.contains('cursor-pointer') ||
+                target.closest('button') || 
+                target.closest('a') ||
+                target.closest('.cursor-pointer')) {
+                return;
+            }
+            
+            // Focus the input for any other clicks within the terminal
+            if (inputRef.current) {
+                inputRef.current.focus();
+                
+                // For mobile, ensure keyboard appears and cursor is at end of input
+                if (isMobile) {
+                    const length = inputRef.current.value.length;
+                    inputRef.current.setSelectionRange(length, length);
+                }
+            }
+        };
+        
+        // Add the click handler to the entire terminal
         if (terminalRef.current) {
-            terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+            terminalRef.current.addEventListener('click', handleTerminalClick);
         }
+        
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            if (terminalRef.current) {
+                // eslint-disable-next-line
+                terminalRef.current.removeEventListener('click', handleTerminalClick);
+            }
+        };
+    }, [isMobile]); // Add isMobile as dependency
+    
+    // Enhanced scroll to bottom when history changes
+    useEffect(() => {
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        // Refocus the input after scrolling
+        inputRef.current?.focus();
     }, [history]);
+
+    // Ensure focus is maintained after any state change
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [input, waitingForCvResponse]);
 
     // Helper function to find common prefix for tab completion
     const findCommonPrefix = (strings) => {
@@ -125,6 +177,29 @@ export default function RoboticsTerminal() {
         }
         
         return firstString.substring(0, prefixLength);
+    };
+
+    // Check for command suggestions when input changes
+    const handleInputChange = (e) => {
+        const newInput = e.target.value;
+        setInput(newInput);
+        
+        // Check if input has capital letters
+        if (/[A-Z]/.test(newInput)) {
+            // Find commands that match case-insensitively
+            const commandKeys = Object.keys(commands);
+            const matchingCommands = commandKeys.filter(cmd => 
+                cmd.toLowerCase().startsWith(newInput.toLowerCase())
+            );
+            
+            if (matchingCommands.length > 0) {
+                setSuggestion(matchingCommands[0]); // Use the first match as suggestion
+            } else {
+                setSuggestion('');
+            }
+        } else {
+            setSuggestion('');
+        }
     };
 
     const executeCommand = (e) => {
@@ -160,29 +235,31 @@ export default function RoboticsTerminal() {
                 return;
               }
 
-            if (input.trim() !== '') {
-                if (input === 'clear') {
+            const commandToExecute = suggestion || input; // Use suggestion if available
+            
+            if (commandToExecute.trim() !== '') {
+                if (commandToExecute === 'clear') {
                     setHistory([]);
                 }
-                else if (input === 'cv') {
+                else if (commandToExecute === 'cv') {
                     // Show a prompt asking if they want to download the CV
                     setHistory([...history, {
-                      command: input,
+                      command: commandToExecute,
                       response: 'Do you want to download my CV? [Y/n]'
                     }]);
-                    // Next user input is a response to the CV prompt
                     setWaitingForCvResponse(true);
                 }
                 else {
                     setHistory([...history, {
-                        command: input,
-                        response: commands[input] || 'Command not found'
+                        command: commandToExecute,
+                        response: commands[commandToExecute] || 'Command not found'
                     }]);
                     
                     // Add command to history for arrow navigation
-                    setCommandHistory([input, ...commandHistory]);
+                    setCommandHistory([commandToExecute, ...commandHistory]);
                 }
                 setInput('');
+                setSuggestion(''); // Clear suggestion
                 setHistoryIndex(-1);
             }
         } else if (e.key === 'ArrowUp') {
@@ -203,8 +280,16 @@ export default function RoboticsTerminal() {
                 setInput('');
             }
         } else if (e.key === 'Tab') {
-            e.preventDefault(); // Prevent default tab behavior
+            e.preventDefault();
             
+            // If there's a suggestion, use it
+            if (suggestion) {
+                setInput(suggestion);
+                setSuggestion('');
+                return;
+            }
+            
+            // Existing Tab completion code...
             // Get possible command completions
             const commandKeys = Object.keys(commands);
             const possibleCompletions = commandKeys.filter(cmd => cmd.startsWith(input));
@@ -226,6 +311,8 @@ export default function RoboticsTerminal() {
                 }
             }
         }
+        // Refocus input after any key press
+        setTimeout(() => inputRef.current?.focus(), 0);
     };
 
     // New function to handle command execution via tap
@@ -250,9 +337,11 @@ export default function RoboticsTerminal() {
             setCommandHistory([command, ...commandHistory]);
         }
         // Focus the input again after executing command
-        if (inputRef.current) {
-            inputRef.current.focus();
-        }
+        setTimeout(() => {
+            if (inputRef.current) {
+                inputRef.current.focus();
+            }
+        }, 0);
     };
 
     // Modify the help command to include clickable items in mobile mode
@@ -299,7 +388,10 @@ export default function RoboticsTerminal() {
     };
 
     return (
-        <div ref={terminalRef} className="bg-[#002b36] text-[#839496] min-h-screen p-2 md:p-4 font-mono overflow-auto text-sm md:text-base">
+        <div 
+            ref={terminalRef} 
+            className="bg-[#002b36] text-[#839496] min-h-screen p-2 md:p-4 font-mono overflow-auto text-sm md:text-base terminal-container"
+        >
             <pre className={`text-[#268bd2] overflow-x-auto whitespace-pre-wrap leading-tight ${isMobile ? 'text-[1.8vw]' : 'text-xs md:text-sm'}`}>
                 {isMobile ? mobileRobotAscii : robotAscii}
             </pre>
@@ -333,20 +425,26 @@ export default function RoboticsTerminal() {
             <div className="flex flex-wrap items-center">
                 <span className="text-[#859900]">user@EdoardoCaciorgna:</span>
                 <span className="text-[#268bd2]">~$</span>
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={executeCommand}
-                    autoFocus
-                    className="bg-transparent outline-none text-[#b58900] ml-1 flex-grow min-w-0"
-                    onClick={() => {
-                        // For mobile devices, ensure keyboard appears
-                        if (inputRef.current) inputRef.current.focus();
-                    }}
-                />
+                <div className="flex-grow relative">
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={input}
+                        onChange={handleInputChange}
+                        onKeyDown={executeCommand}
+                        autoFocus
+                        className="bg-transparent outline-none text-[#b58900] ml-1 w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    {suggestion && (
+                        <div className="absolute left-1 top-0 text-gray-500 pointer-events-none">
+                            {input}
+                            <span className="text-[#586e75]">{suggestion.slice(input.length)}</span>
+                        </div>
+                    )}
+                </div>
             </div>
+            <div ref={bottomRef} /> {/* Invisible element at the bottom for scrolling */}
         </div>
     );
 }
