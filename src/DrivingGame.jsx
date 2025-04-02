@@ -45,6 +45,43 @@ const DrivingGame = () => {
       currentWaypointIndex: 0, // Track current target waypoint
     };
 
+    // Handle clicks on canvas to respawn the car
+    const handleCanvasClick = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Set car position to click position
+      car.x = x;
+      car.y = y;
+      
+      // Reset car state
+      car.angle = 0;
+      car.steering = 0;
+      
+      // Find closest waypoint to set as target
+      if (waypoints.length > 0) {
+        let closestIndex = 0;
+        let closestDist = Infinity;
+        
+        waypoints.forEach((wp, index) => {
+          const dx = wp.x - x;
+          const dy = wp.y - y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestIndex = index;
+          }
+        });
+        
+        car.currentWaypointIndex = closestIndex;
+      }
+    };
+    
+    // Add click event listener
+    canvas.addEventListener('click', handleCanvasClick);
+
     // Build Delaunay from cone coordinates
     const points = cones.map(({ x, y }) => [x, y]);
     const delaunay = Delaunay.from(points);
@@ -186,12 +223,12 @@ const DrivingGame = () => {
           ctx.arc(wp.x, wp.y, 3, 0, 2 * Math.PI);
           ctx.fill();
           
-          // Draw waypoint number
-          ctx.fillStyle = 'white';
-          ctx.font = '10px Arial';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(index.toString(), wp.x, wp.y - 10);
+        //   // Draw waypoint number
+        //   ctx.fillStyle = 'white';
+        //   ctx.font = '10px Arial';
+        //   ctx.textAlign = 'center';
+        //   ctx.textBaseline = 'middle';
+        //   ctx.fillText(index.toString(), wp.x, wp.y - 10);
           
           // Highlight current target waypoint
           if (index === car.currentWaypointIndex) {
@@ -235,9 +272,13 @@ const DrivingGame = () => {
     };
 
     draw();
-    return () => window.cancelAnimationFrame(animationFrameId);
-	// eslint-disable-next-line
-}, [showTriangulation]);
+    
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      canvas.removeEventListener('click', handleCanvasClick);
+    };
+    // eslint-disable-next-line
+  }, [showTriangulation]);
 
   return (
     <div className="mt-2">
@@ -246,10 +287,12 @@ const DrivingGame = () => {
         width={400}
         height={300}
         className="bg-[#073642] border border-[#586e75]"
+        title="Click anywhere to spawn the car at that position"
       />
       <div className="text-xs mt-1 text-[#93a1a1]">
-        Autonomous car navigating using Ackermann steering model
+        This is a pretty basic example of autonomous car navigating using Ackermann steering model
         <br />Yellow cones: outer track | Blue cones: inner track
+        <br /><strong>Click anywhere on the track to spawn the car at that position</strong>
       </div>
       <button
         onClick={() => setShowTriangulation((prev) => !prev)}
