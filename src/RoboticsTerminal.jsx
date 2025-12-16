@@ -37,24 +37,32 @@ const commands = {
             <br></br>- <strong>skills</strong> ,
             <br></br>- <strong>whoami</strong> : a brief introduction to me, 
             </p>,
-    whoami: `Hi there 👋\nI'm a dedicated and enthusiastic Master's degree student pursuing a degree in Robotics Engineering, with a strong passion for robotics, autonomous driving, and cutting-edge technology.\n\nFun fact: My GitHub username "rimaturus" is derived from the Latin word "rimor" meaning "to explore/discover." I chose this verb in the future participle form to reflect my ongoing passion and commitment for delving into new technologies and pushing the boundaries of what's possible in robotics.`,
+    whoami: `Hi there 👋\nI'm a Master's degree graduate engineer passionate about electronics, robotics and programming. Skilled in C++, Python, ROS2 and embedded systems. My key projects include developing a fully autonomous driving car and leading the Driverless sector of my university's Formula Student team. These experiences honed my abilities in teamwork, task scheduling, performing under pressure and cross-disciplinary problem-solving. I'm curious, driven and enjoy applying unconventional approaches to tackle challenges across various disciplines.\n\nFun fact: My GitHub username "rimaturus" is derived from the Latin word "rimor" meaning "to explore/discover." I chose this verb in the future participle form to reflect my ongoing passion and commitment for delving into new technologies and pushing the boundaries of what's possible in robotics.`,
 
-    education: `🎓 Master's Degree in Robotics Engineering - University of Pisa\n🎓 Bachelor's Degree in Electronics Engineering - University of Pisa`,
+    education: `🎓 Master's Degree in Robotics and Automation Engineering - University of Pisa (110/110 cum laude)\n🎓 Bachelor's Degree in Electronic Engineering - University of Pisa (94/110)`,
     
     research: `Research Interests:\n\n🤖 Robotics\n🚗 Autonomous Driving\n📟 PCB & Microcontrollers`,
     
     projects: (
         <p>Projects I have worked on:
-            <br/><br/>🏎️ <strong>ETeam Squadra Corse</strong><br/>
-                - <strong>Model Predictive Control</strong> for autonomous driving FSAE car based on SLAM and cone detection<br/>
-                - <strong>GraphSLAM</strong> for precise and dynamic mapping and localization during environment exploration<br/>
-                - Real-time code development using FreeRTOS for Vehicle Control Unit and other critical system
+            <br/><br/>🚗 <strong>SmartDrive Project (Master's Thesis)</strong><br/>
+                Design and development of a 1:5 scale autonomous vehicle with:<br/>
+                - <strong>Hardware Architecture:</strong> NVIDIA Jetson AGX Orin, STM32 safety MCU, ZED2 stereo camera, RPLiDAR S2, Xsens RTK-GNSS/INS<br/>
+                - <strong>Real-Time Software Stack:</strong> Deterministic ROS2-based pipeline on PREEMPT_RT kernel<br/>
+                - <strong>Multi-Modal Perception:</strong> YOLOv11s neural network with motion-compensated LiDAR processing<br/>
+                - <strong>Dual SLAM:</strong> EKF-SLAM (100Hz) + Graph-SLAM for optimized mapping<br/>
+                - <strong>Advanced MPC:</strong> AS-RTI-MPC with acados solver, achieving 20-30% tracking error reduction<br/>
+                - <strong>Performance:</strong> 0.528ms mean control computation time, guaranteed 100Hz operation
             <br/><br/>
-            🏎️ <strong>SmartDrive</strong>
+            🏎️ <strong>E-Team Squadra Corse</strong><br/>
+                - <strong>Driverless Sector Manager:</strong> Led AI/Software development and coordination<br/>
+                - <strong>Control & Navigation:</strong> MPC-based autonomous driving for FSAE car with SLAM and cone detection<br/>
+                - <strong>Real-time Development:</strong> FreeRTOS and C++ for Vehicle Control Unit (VCU)<br/>
+                - <strong>Telemetry:</strong> Radio communication for CAN data transmission to ground station
         </p>
     ),
     
-    skills: `Skills:\n\n💻 Programming Languages: Python, C++\n🤖 Robotics Frameworks: ROS/ROS2 (Robot Operating System), Gazebo\n📂 Version Control: Git, GitHub, Gitlab\n🔧 Others: Docker, MATLAB/Simulink`,
+    skills: `Skills:\n\n💻 Programming Languages: C/C++, Python, Bash, MATLAB, Simulink\n🤖 Frameworks: ROS/ROS2, CasADI, ACADOS, Gazebo, FreeRTOS\n🔧 Tools: Git, VSCode, Linux, Fusion360, ArduinoIDE, CANAnalyzer, PlatformIO, STM32`,
     
     quote: <p className="italic">The best way to predict the future is to invent it. - Alan Kay</p>,
     
@@ -396,7 +404,7 @@ export default function RoboticsTerminal() {
                 {isMobile ? mobileRobotAscii : robotAscii}
             </pre>
             <div className="mb-2 text-[#2aa198] text-sm md:text-base leading-tight">
-                Hi there, welcome to my personal website. 👋<br></br>I'm a dedicated and enthusiastic Master's degree student pursuing a degree in Robotics Engineering, with a strong passion for robotics, autonomous driving, and cutting-edge technology.
+                Hi there, welcome to my personal website. 👋<br></br>I'm a Master's degree graduate engineer passionate about electronics, robotics and programming, with a strong focus on autonomous driving and embedded systems.
                 <br></br><br></br>
                 (This is a fake terminal. Type 'help' to see available commands)
             </div>
