@@ -68,7 +68,7 @@ const commands = {
     
     contacts: (
         <div className="flex flex-col md:flex-row items-center">
-            <img src={myImage} alt="myImage" className="w-40 h-40 md:w-60 md:h-60 mb-4 md:mr-4" />
+            <img src={myImage} alt="myImage" className="w-40 h-auto md:w-60 md:h-auto mb-4 md:mr-4 object-contain" />
             <div>
                 <p><strong>Name:</strong> Edoardo Caciorgna</p>
                 <p><strong>Email:</strong> edo.ca1999@gmail.com</p>
