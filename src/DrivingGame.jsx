@@ -1,284 +1,193 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Delaunay } from 'd3-delaunay';
 
 const DrivingGame = () => {
   const canvasRef = useRef(null);
-  const [showTriangulation, setShowTriangulation] = useState(true);
+  const [showPath, setShowPath] = useState(true);
 
-  // Track with blue and yellow cones
-  const cones = [
-    { x: 100, y: 100, color: 'blue' },
-    { x: 150, y: 90, color: 'blue' },
-    { x: 200, y: 100, color: 'blue' },
-    { x: 250, y: 130, color: 'blue' },
-    { x: 270, y: 180, color: 'blue' },
-    { x: 250, y: 230, color: 'blue' },
-    { x: 200, y: 250, color: 'blue' },
-    { x: 150, y: 230, color: 'blue' },
-    { x: 120, y: 180, color: 'blue' },
-    { x: 80, y: 80, color: 'yellow' },
-    { x: 150, y: 60, color: 'yellow' },
-    { x: 220, y: 80, color: 'yellow' },
-    { x: 280, y: 130, color: 'yellow' },
-    { x: 300, y: 180, color: 'yellow' },
-    { x: 280, y: 250, color: 'yellow' },
-    { x: 200, y: 280, color: 'yellow' },
-    { x: 130, y: 250, color: 'yellow' },
-    { x: 90, y: 180, color: 'yellow' },
-  ];
+  // We use refs for mutable state that changes inside the animation loop
+  // to avoid React state staleness or triggering unnecessary re-renders.
+  const waypointsRef = useRef([]);
+  const isDrawingRef = useRef(false);
+  
+  const carRef = useRef({
+    x: -100, // Hide off-screen initially
+    y: -100,
+    length: 20,
+    width: 8,
+    angle: 0,
+    steering: 0,
+    speed: 1.5,
+    wheelbase: 20,
+    currentWaypointIndex: 0,
+  });
 
+  // --- Drawing Input Handlers ---
+  const getPointerPos = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  };
+
+  const handlePointerDown = (e) => {
+    isDrawingRef.current = true;
+    const pos = getPointerPos(e);
+    
+    // Start a new track
+    waypointsRef.current = [pos];
+    
+    // Reset the car to the starting point
+    carRef.current.x = pos.x;
+    carRef.current.y = pos.y;
+    carRef.current.angle = 0;
+    carRef.current.steering = 0;
+    carRef.current.currentWaypointIndex = 0;
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isDrawingRef.current) return;
+    const pos = getPointerPos(e);
+    const waypoints = waypointsRef.current;
+    const lastPos = waypoints[waypoints.length - 1];
+
+    // Distance threshold: only add a point if we've moved at least 10 pixels.
+    // This naturally "smooths" the drawn track so the car doesn't jitter.
+    const dx = pos.x - lastPos.x;
+    const dy = pos.y - lastPos.y;
+    if (Math.sqrt(dx * dx + dy * dy) > 10) {
+      waypoints.push(pos);
+      
+      // Orient the car towards the very first segment immediately
+      if (waypoints.length === 2) {
+        carRef.current.angle = Math.atan2(dy, dx);
+      }
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDrawingRef.current = false;
+  };
+
+  // --- Game Loop ---
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    // Car parameters
-    const car = {
-      x: 150,
-      y: 150,
-      length: 20,
-      width: 8,
-      angle: 0,
-      steering: 0,
-      speed: 1.0,
-      wheelbase: 20,
-      currentWaypointIndex: 0, // Track current target waypoint
-    };
+    const updateCarPosition = () => {
+      const car = carRef.current;
+      const waypoints = waypointsRef.current;
 
-    // Handle clicks on canvas to respawn the car
-    const handleCanvasClick = (event) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      
-      // Set car position to click position
-      car.x = x;
-      car.y = y;
-      
-      // Reset car state
-      car.angle = 0;
-      car.steering = 0;
-      
-      // Find closest waypoint to set as target
-      if (waypoints.length > 0) {
-        let closestIndex = 0;
-        let closestDist = Infinity;
-        
-        waypoints.forEach((wp, index) => {
-          const dx = wp.x - x;
-          const dy = wp.y - y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          if (dist < closestDist) {
-            closestDist = dist;
-            closestIndex = index;
-          }
-        });
-        
-        car.currentWaypointIndex = closestIndex;
+      // Don't drive while the user is actively drawing or if no track exists
+      if (isDrawingRef.current || waypoints.length <= 1) return;
+
+      // Stop driving if we reached the final waypoint
+      if (car.currentWaypointIndex >= waypoints.length - 1) {
+        const lastWp = waypoints[waypoints.length - 1];
+        const distToEnd = Math.sqrt(Math.pow(lastWp.x - car.x, 2) + Math.pow(lastWp.y - car.y, 2));
+        if (distToEnd < 5) return; // Car has arrived
       }
-    };
-    
-    // Add click event listener
-    canvas.addEventListener('click', handleCanvasClick);
 
-    // Build Delaunay from cone coordinates
-    const points = cones.map(({ x, y }) => [x, y]);
-    const delaunay = Delaunay.from(points);
-    const triangles = delaunay.triangles;
-
-    // Collect midpoints for edges that connect different-color cones
-	const waypoints = [];
-	for (let i = 0; i < triangles.length; i += 3) {
-	  // Indices in 'points' (and in 'cones')
-	  const iA = triangles[i];
-	  const iB = triangles[i + 1];
-	  const iC = triangles[i + 2];
-
-	  // We'll examine edges (A,B), (B,C), (C,A)
-	  const edges = [
-		[iA, iB],
-		[iB, iC],
-		[iC, iA],
-	  ];
-
-	  edges.forEach(([idx1, idx2]) => {
-		const c1 = cones[idx1];
-		const c2 = cones[idx2];
-		// Only keep edge if they have different colors
-		if (c1.color !== c2.color) {
-		  // Compute midpoint
-		  const mx = (c1.x + c2.x) / 2;
-		  const my = (c1.y + c2.y) / 2;
-		  waypoints.push({ x: mx, y: my });
-		}
-	  });
-	}
-	
-	// Reorder waypoints to form a continuous path
-	if (waypoints.length > 1) {
-	  const orderedWaypoints = [waypoints[0]]; // Start with first waypoint
-	  const unvisited = waypoints.slice(1);    // Remaining waypoints
-	  
-	  while (unvisited.length > 0) {
-		const current = orderedWaypoints[orderedWaypoints.length - 1];
-		let closestIdx = 0;
-		let closestDist = Infinity;
-		
-		// Find closest unvisited waypoint
-		for (let i = 0; i < unvisited.length; i++) {
-		  const dx = current.x - unvisited[i].x;
-		  const dy = current.y - unvisited[i].y;
-		  const dist = Math.sqrt(dx * dx + dy * dy);
-		  
-		  if (dist < closestDist) {
-			closestDist = dist;
-			closestIdx = i;
-		  }
-		}
-		
-		// Add closest waypoint and remove from unvisited
-		orderedWaypoints.push(unvisited[closestIdx]);
-		unvisited.splice(closestIdx, 1);
-	  }
-	  
-	  // Replace original waypoints with ordered ones
-	  waypoints.length = 0;
-	  waypoints.push(...orderedWaypoints);
-	}
-    
-    // Path planning - modified to follow sequential waypoints
-    const updateTargetWaypoint = () => {
-      if (waypoints.length === 0) return { x: car.x, y: car.y }; // fallback
-      
+      // 1. Get Target Waypoint
       const currentWaypoint = waypoints[car.currentWaypointIndex];
-      
-      // Calculate distance to current waypoint
       const dx = currentWaypoint.x - car.x;
       const dy = currentWaypoint.y - car.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      // If car is close enough to current waypoint, move to next one
-      if (dist < 15) { // Threshold distance for considering waypoint reached
-        car.currentWaypointIndex = (car.currentWaypointIndex + 1) % waypoints.length;
+
+      // Advance to the next waypoint if we are close enough
+      if (dist < 15 && car.currentWaypointIndex < waypoints.length - 1) {
+        car.currentWaypointIndex++;
       }
-      
-      return waypoints[car.currentWaypointIndex];
-    };
 
-    // Ackermann steering model update
-    const updateCarPosition = () => {
-      const target = updateTargetWaypoint();
-      const dx = target.x - car.x;
-      const dy = target.y - car.y;
-      const targetAngle = Math.atan2(dy, dx);
+      const target = waypoints[car.currentWaypointIndex];
+      const targetAngle = Math.atan2(target.y - car.y, target.x - car.x);
 
-      // Normalize angle error in (-π, π)
+      // 2. Calculate Steering (Normalized Angle Error)
       let angleError = targetAngle - car.angle;
       while (angleError > Math.PI) angleError -= 2 * Math.PI;
       while (angleError < -Math.PI) angleError += 2 * Math.PI;
 
-      // Simple proportional control
+      // Proportional control for steering
       car.steering = Math.max(-0.8, Math.min(0.8, angleError));
 
-      // Update car pose
+      // 3. Update Pose (Ackermann Model)
       car.x += car.speed * Math.cos(car.angle);
       car.y += car.speed * Math.sin(car.angle);
       car.angle += (car.speed * Math.tan(car.steering)) / car.wheelbase;
     };
 
-    // Main draw loop
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const waypoints = waypointsRef.current;
+      const car = carRef.current;
 
-      // Draw cones
-      cones.forEach(({ x, y, color }) => {
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-      });
-
-      // Draw Delaunay triangulation if toggled on
-      if (showTriangulation) {
+      // Draw the custom track
+      if (showPath && waypoints.length > 0) {
+        // Draw road asphalt
         ctx.strokeStyle = '#586e75';
-        for (let i = 0; i < triangles.length; i += 3) {
-          const a = points[triangles[i]];
-          const b = points[triangles[i + 1]];
-          const c = points[triangles[i + 2]];
-
-          ctx.beginPath();
-          ctx.moveTo(a[0], a[1]);
-          ctx.lineTo(b[0], b[1]);
-          ctx.lineTo(c[0], c[1]);
-          ctx.closePath();
-          ctx.stroke();
+        ctx.lineWidth = 24; 
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(waypoints[0].x, waypoints[0].y);
+        for (let i = 1; i < waypoints.length; i++) {
+          ctx.lineTo(waypoints[i].x, waypoints[i].y);
         }
+        ctx.stroke();
 
-        // Draw waypoints in lime with position numbers
-        ctx.fillStyle = 'lime';
-        waypoints.forEach((wp, index) => {
-          // Draw waypoint dot
-          ctx.beginPath();
-          ctx.arc(wp.x, wp.y, 3, 0, 2 * Math.PI);
-          ctx.fill();
-          
-        //   // Draw waypoint number
-        //   ctx.fillStyle = 'white';
-        //   ctx.font = '10px Arial';
-        //   ctx.textAlign = 'center';
-        //   ctx.textBaseline = 'middle';
-        //   ctx.fillText(index.toString(), wp.x, wp.y - 10);
-          
-          // Highlight current target waypoint
-          if (index === car.currentWaypointIndex) {
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(wp.x, wp.y, 6, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          
-          ctx.fillStyle = 'lime';
-        });
+        // Draw dotted center line
+        ctx.strokeStyle = '#93a1a1';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.moveTo(waypoints[0].x, waypoints[0].y);
+        for (let i = 1; i < waypoints.length; i++) {
+          ctx.lineTo(waypoints[i].x, waypoints[i].y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset line dash
       }
 
-      // Draw car
-      ctx.save();
-      ctx.translate(car.x, car.y);
-      ctx.rotate(car.angle);
-      ctx.fillStyle = 'red';
-      ctx.fillRect(-car.length / 2, -car.width / 2, car.length, car.width);
+      // Draw the car (only if we have drawn at least one point)
+      if (waypoints.length > 0) {
+        ctx.save();
+        ctx.translate(car.x, car.y);
+        ctx.rotate(car.angle);
+        
+        // Car Body
+        ctx.fillStyle = 'red';
+        ctx.fillRect(-car.length / 2, -car.width / 2, car.length, car.width);
 
-      // Front wheels
-      ctx.save();
-      ctx.translate(car.length / 2 - 5, -car.width / 2);
-      ctx.rotate(car.steering);
-      ctx.fillStyle = 'black';
-      ctx.fillRect(-2, -1, 4, 2);
-      ctx.restore();
+        // Front Left Wheel
+        ctx.save();
+        ctx.translate(car.length / 2 - 5, -car.width / 2);
+        ctx.rotate(car.steering);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(-2, -1, 4, 2);
+        ctx.restore();
 
-      ctx.save();
-      ctx.translate(car.length / 2 - 5, car.width / 2);
-      ctx.rotate(car.steering);
-      ctx.fillStyle = 'black';
-      ctx.fillRect(-2, -1, 4, 2);
-      ctx.restore();
-      ctx.restore();
+        // Front Right Wheel
+        ctx.save();
+        ctx.translate(car.length / 2 - 5, car.width / 2);
+        ctx.rotate(car.steering);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(-2, -1, 4, 2);
+        ctx.restore();
+        ctx.restore();
+      }
 
-      // Update car
       updateCarPosition();
       animationFrameId = window.requestAnimationFrame(draw);
     };
 
     draw();
-    
+
     return () => {
       window.cancelAnimationFrame(animationFrameId);
-      canvas.removeEventListener('click', handleCanvasClick);
     };
-    // eslint-disable-next-line
-  }, [showTriangulation]);
+  }, [showPath]);
 
   return (
     <div className="mt-2">
@@ -286,19 +195,23 @@ const DrivingGame = () => {
         ref={canvasRef}
         width={400}
         height={300}
-        className="bg-[#073642] border border-[#586e75]"
-        title="Click anywhere to spawn the car at that position"
+        // touch-none prevents the page from scrolling while drawing on mobile devices
+        className="bg-[#073642] border border-[#586e75] touch-none cursor-crosshair"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        title="Click and drag to draw a track"
       />
       <div className="text-xs mt-1 text-[#93a1a1]">
-        This is a pretty basic example of autonomous car navigating using Ackermann steering model
-        <br />Yellow cones: outer track | Blue cones: inner track
-        <br /><strong>Click anywhere on the track to spawn the car at that position</strong>
+        <strong>Click and drag to draw a custom path!</strong>
+        <br />The car will wait until you finish drawing, then follow your track using the Ackermann model.
       </div>
       <button
-        onClick={() => setShowTriangulation((prev) => !prev)}
-        className="mt-2 text-xs text-[#839496] border border-[#586e75] px-2 py-1"
+        onClick={() => setShowPath((prev) => !prev)}
+        className="mt-2 text-xs text-[#839496] border border-[#586e75] px-2 py-1 hover:bg-[#586e75] hover:text-white transition-colors"
       >
-        {showTriangulation ? 'Hide' : 'Show'} Triangulation
+        {showPath ? 'Hide' : 'Show'} Track
       </button>
     </div>
   );
